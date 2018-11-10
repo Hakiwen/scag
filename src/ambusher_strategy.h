@@ -12,9 +12,9 @@ private:
 public:
 	ambusher_strategy() = default;
 	ambusher_strategy(const ambusher_strategy&);
-	ambusher_strategy(ambusher_strategy&&);
+	ambusher_strategy(ambusher_strategy&&) noexcept;
 	ambusher_strategy&operator=(const ambusher_strategy&);
-	ambusher_strategy&operator=(ambusher_strategy&&);
+	ambusher_strategy&operator=(ambusher_strategy&&) noexcept;
 	~ambusher_strategy();
 };
 

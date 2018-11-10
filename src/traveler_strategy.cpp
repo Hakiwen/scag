@@ -6,10 +6,10 @@
 
 traveler_strategy::traveler_strategy(const traveler_strategy& rhs) {}
 
-traveler_strategy::traveler_strategy(traveler_strategy&& rhs) {}
+traveler_strategy::traveler_strategy(traveler_strategy&& rhs) noexcept {}
 
 traveler_strategy& traveler_strategy::operator=(const traveler_strategy & rhs) {}
 
-traveler_strategy& traveler_strategy::operator=(traveler_strategy && rhs) {}
+traveler_strategy& traveler_strategy::operator=(traveler_strategy && rhs) noexcept{}
 
 traveler_strategy::~traveler_strategy() {}

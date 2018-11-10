@@ -5,6 +5,8 @@
 #ifndef SCAG_UTILS_H
 #define SCAG_UTILS_H
 #include <vector>
+#include <random>
 #include <boost/graph/undirected_graph.hpp>
+
 
 #endif //SCAG_UTILS_H
