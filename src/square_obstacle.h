@@ -16,6 +16,7 @@ private:
 	point bottom_right;
 	double width;
 	double height;
+	friend class game_map;
 public:
 	square_obstacle() = default;
 	square_obstacle(point tl, point tr , point bl, point br); //define corners

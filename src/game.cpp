@@ -29,10 +29,6 @@ game& game::operator= (game&& rhs) noexcept
 	return *this;
 }
 
-game::~game()
-{
-
-}
 game::game(traveler_strategy traveler_strat_, ambusher_strategy ambusher_strat_) : traveler_strat(traveler_strat_), ambusher_strat(ambusher_strat_)
 {
 		this->evaluate();

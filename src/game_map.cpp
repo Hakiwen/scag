@@ -9,8 +9,9 @@ game_map::game_map(std::initializer_list<square_obstacle> obstacles_, double w_,
 																								obstacles(std::vector<square_obstacle>(obstacles_)){}
 game_map::game_map(double n, double w_, double h_) : width(w_),
 														height(h_) {
-	obstacles = std::vector<square_obstacle>(n);
+	this->obstacles = std::vector<square_obstacle>(n);
 	std::default_random_engine gen;
+	std::default_random_engine gen2;
 	std::uniform_real_distribution<double> x_distribution(0.0, w_);
 	std::uniform_real_distribution<double> y_disrtibution(0.0, h_);
 
@@ -31,7 +32,7 @@ game_map::game_map(double n, double w_, double h_) : width(w_),
 		std::uniform_real_distribution<double>height_distribution(MIN_BOX_DIM, height_upper_bound);
 		std::uniform_real_distribution<double>width_distribution(MIN_BOX_DIM, width_upper_bound);
 
-		obstacles.emplace_back(square_obstacle(anchor_point, width_distribution(gen), height_distribution(gen)));
+		this->obstacles[i] = square_obstacle(anchor_point, width_distribution(gen), height_distribution(gen2));
 	}
 }
 
@@ -63,4 +64,26 @@ game_map& game_map::operator=(game_map && rhs) noexcept{
 	rhs.height = -1;
 
 	return *this;
+}
+
+bool game_map::is_point_in_X_free(point p) {
+	bool ret = true;
+	for(int i = 0; i < obstacles.size(); i++){
+		ret = ret && !((p.x > obstacles[i].top_left.x) &&
+						(p.x < obstacles[i].top_right.x) &&
+				(p.y > obstacles[i].bottom_left.y) &&
+				(p.y < obstacles[i].top_left.y));
+	}
+}
+
+void game_map::draw() {
+	glBegin(GL_QUADS);
+	for(int i = 0; i < obstacles.size(); i++){
+		glColor3f(0.0f,0.0f,0.0f);
+		glVertex2d(obstacles[i].top_left.x/this->width , obstacles[i].top_left.y/this->height );
+		glVertex2d(obstacles[i].bottom_left.x/this->width , obstacles[i].bottom_right.y/this->height );
+		glVertex2d(obstacles[i].bottom_right.x/this->width , obstacles[i].bottom_right.y/this->height );
+		glVertex2d(obstacles[i].top_right.x/this->width , obstacles[i].top_right.y/this->height );
+	}
+	glEnd();
 }

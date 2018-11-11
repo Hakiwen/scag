@@ -7,6 +7,6 @@
 #include <vector>
 #include <random>
 #include <boost/graph/undirected_graph.hpp>
-
+#include <GL/glut.h>
 
 #endif //SCAG_UTILS_H

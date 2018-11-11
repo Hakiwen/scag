@@ -25,6 +25,9 @@ public:
 	game_map(game_map&&) noexcept;
 	game_map&operator=(const game_map&);
 	game_map&operator=(game_map&&) noexcept;
+
+	void draw();
+	bool is_point_in_X_free(point p);
 };
 
 

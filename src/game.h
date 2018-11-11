@@ -22,7 +22,6 @@ public:
 	game(game&&) noexcept;
 	game& operator=(const game&);
 	game& operator=(game&&) noexcept;
-	~game();
 	game(traveler_strategy, ambusher_strategy);
 
 	double get_outcome() const;
