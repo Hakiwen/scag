@@ -6,7 +6,7 @@
 
 edge::edge(point head_, point tail_) : head(head_), tail(tail_) {}
 
-game_map::game_map(double n, int grid_points_) : grid_points(grid_points_){
+game_map::game_map(double n, int grid_points_) : grid_points(((int)sqrt(grid_points_))*((int)sqrt(grid_points_))){
 	this->obstacles = std::vector<square_obstacle>(n);
 	std::chrono::high_resolution_clock::time_point seed_beg = std::chrono::high_resolution_clock::now();
 	std::chrono::high_resolution_clock::time_point seed_end = std::chrono::high_resolution_clock::now();
@@ -39,13 +39,17 @@ game_map::game_map(double n, int grid_points_) : grid_points(grid_points_){
 	this->edges = generate_edges();
 	this->connectivity_matrix = generate_connectivity_matrix();
 	this->D_matrix = generate_D_matrix();
+	this->solution = solve_game_traveler();
+	this->ambush = solve_game_ambusher();
 
 	for(int i = 0; i < edges.size()*grid.size(); i ++)
 	{
-		if(!(i % edges.size()))
-			std::cout << std::endl;
-		std::cout << D_matrix[i] << ", ";
+//		if(!(i % edges.size()))
+//			std::cout << std::endl;
+//		std::cout << connectivity_matrix[i] << ", ";
+//		std::cout << solution[i] << ", ";
 	}
+
 }
 
 game_map::game_map(const game_map & rhs) : obstacles(rhs.obstacles) {}
@@ -79,14 +83,28 @@ bool game_map::is_point_in_X_free(point p) {
 	return ret;
 }
 
+void draw_circle(point p, double r)
+{
+	int n_segments = 20;
+	glBegin(GL_LINE_LOOP);
+	glColor3d(1.0,0.0,0.0);
+	for(int i = 0; i < n_segments; i++){
+		double theta = (2.0f*M_1_PI*i)/n_segments;
+		double x = r*cosf(theta);
+		double y = r*sinf(theta);
+		glVertex2d(2*x - 1 + p.x, 2*y - 1 + p.y);
+	}
+	glEnd();
+}
+
 void game_map::draw() {
 	glBegin(GL_QUADS);
 	for(int i = 0; i < obstacles.size(); i++){
 		glColor3f(0.0f,0.0f,0.0f);
-		glVertex2d(obstacles[i].top_left.x, obstacles[i].top_left.y);
-		glVertex2d(obstacles[i].bottom_left.x, obstacles[i].bottom_right.y);
-		glVertex2d(obstacles[i].bottom_right.x, obstacles[i].bottom_right.y);
-		glVertex2d(obstacles[i].top_right.x, obstacles[i].top_right.y);
+		glVertex2d(2*obstacles[i].top_left.x - 1.0, 2*obstacles[i].top_left.y - 1.0);
+		glVertex2d(2*obstacles[i].bottom_left.x - 1.0, 2*obstacles[i].bottom_right.y - 1.0);
+		glVertex2d(2*obstacles[i].bottom_right.x - 1.0, 2*obstacles[i].bottom_right.y - 1.0);
+		glVertex2d(2*obstacles[i].top_right.x - 1.0, 2*obstacles[i].top_right.y - 1.0);
 	}
 	glEnd();
 
@@ -96,7 +114,7 @@ void game_map::draw() {
 	for(int i = 0; i < grid.size(); i++){
 		glColor3f(0.0f,0.0f,0.0f);
 		if(is_point_in_X_free(grid[i])) {
-			glVertex2d(grid[i].x,grid[i].y);
+			glVertex2d(2*grid[i].x - 1.0 ,2*grid[i].y - 1.0);
 		}
 //			glVertex2d(grid[i][j].x/this->width + point_size, grid[i][j].y/this->height + point_size);
 //			glVertex2d(grid[i][j].x/this->width - point_size, grid[i][j].y/this->height + point_size);
@@ -107,13 +125,18 @@ void game_map::draw() {
 
 	glBegin(GL_LINES);
 	for(int i = 0; i < edges.size(); i++){
-		glColor3d(1.0f,0.0f,0.0f);
+		glColor3d(1.0f - solution[i],1.0f - solution[i],1.0f - solution[i]);
 //		glColor3f(1.0f,1.0f,1.0f);
-		glVertex2d(edges[i].head.x, edges[i].head.y);
-		glVertex2d(edges[i].tail.x, edges[i].tail.y);
+		glVertex2d(2*edges[i].head.x - 1.0, 2*edges[i].head.y - 1.0);
+		glVertex2d(2*edges[i].tail.x - 1.0, 2*edges[i].tail.y - 1.0);
 	}
 	glEnd();
 
+	for(int i = 0;i < grid.size(); i++){
+		if(ambush[i] > 0.001){
+			draw_circle(grid[i],ambush[i]);
+		}
+	}
 
 }
 
@@ -153,7 +176,7 @@ std::vector<point> game_map::generate_grid(){
 	std::vector<point> ret((row_size)*(column_size));
 
 	for(int i = 0; i < (column_size)*(row_size); i++){
-		ret[i] = point((i % row_size)*spacing, (i/row_size)*spacing);
+		ret[i] = point((i / row_size)*spacing, (i % row_size)*spacing);
 	}
 	return ret;
 }
@@ -163,7 +186,7 @@ std::vector<edge> game_map::generate_edges(){
 	for(int i = 0; i < grid.size(); i++){
 		for(int j = i + 1; j < grid.size(); j++){
 			double norm = grid[i]^grid[j];
-			if((norm <= sqrt(2.2)/(sqrt(grid_points) - 1)) && is_edge_in_X_free(grid[i], grid[j]))
+			if((norm <= sqrt(2.5)/(sqrt(grid_points) - 1)) && is_edge_in_X_free(grid[i], grid[j]))
 				ret.push_back(edge(grid[i], grid[j]));
 		}
 	}
@@ -197,4 +220,108 @@ int * game_map::generate_D_matrix(){
 		}
 	}
 	return ret;
+}
+
+
+std::string itos(int i) {std::stringstream s; s << i; return s.str(); }
+std::vector<double> game_map::solve_game_traveler(){
+	try {
+		GRBEnv env = GRBEnv();
+		GRBModel model = GRBModel(env);
+
+		GRBVar *vars = new GRBVar[edges.size()];
+		for (int i = 0; i < edges.size(); i++) {
+			std::string name = "p_" + itos(i);
+			vars[i] = model.addVar(0.0, 1.0, 0.0, GRB_CONTINUOUS, "p" + itos(i));
+		}
+		GRBVar z = model.addVar(0.0, 10000.0, 1.0, GRB_CONTINUOUS, "z");
+		GRBLinExpr obj_function(z);
+		model.setObjective(obj_function);
+		for (int i = sqrt(grid_points); i < grid.size() - sqrt(grid_points); i++) {
+			GRBLinExpr flow_const = 0;
+			for (int j = 0; j < edges.size(); j++) {
+				flow_const += connectivity_matrix[i * edges.size() + j] * vars[j];
+			}
+			model.addConstr(flow_const == 0.0, "r_" + itos(i));
+		}
+
+		GRBLinExpr source_const = 0;
+		for (int i = 0; i < sqrt(grid_points); i++) {
+			for (int j = 0; j < edges.size(); j++) {
+				source_const += connectivity_matrix[i * edges.size() + j] * vars[j];
+			}
+		}
+		model.addConstr(source_const == -1.0, "s");
+
+		GRBLinExpr sink_const = 0;
+		for (int i = grid.size() - sqrt(grid_points); i < grid.size(); i++) {
+			for (int j = 0; j < edges.size(); j++) {
+				sink_const += connectivity_matrix[i * edges.size() + j] * vars[j];
+			}
+		}
+		model.addConstr(sink_const == 1.0, "t");
+
+
+		for (int i = 0; i < grid.size(); i++) {
+			GRBLinExpr slack_const = 0;
+			for (int j = 0; j < edges.size(); j++) {
+				slack_const += D_matrix[i * edges.size() + j] * vars[j] - z;
+			}
+			model.addConstr(slack_const <= 0.0, "z_" + itos(i));
+		}
+
+		model.optimize();
+
+		std::vector<double> ret(edges.size());
+		for (int i = 0; i < edges.size(); i++) {
+			ret[i] = vars[i].get(GRB_DoubleAttr_X);
+		}
+		return ret;
+	}
+	catch(GRBException e){
+		std::cout << "Error Code = " << e.getErrorCode() << std::endl;
+		std::cout << e.getMessage() << std::endl;
+	}
+}
+
+std::vector<double> game_map::solve_game_ambusher(){
+	try {
+		GRBEnv env = GRBEnv();
+		GRBModel model = GRBModel(env);
+
+		GRBVar *vars = new GRBVar[grid.size()];
+		for (int i = 0; i < grid.size(); i++) {
+			std::string name = "p_" + itos(i);
+			vars[i] = model.addVar(0.0, 1.0, 0.0, GRB_CONTINUOUS, "q" + itos(i));
+		}
+		GRBLinExpr obj_function = 0;
+		for (int i = 0; i < grid.size(); i++) {
+			GRBLinExpr intermediate = 0;
+			for (int j = 0; j < edges.size(); j++) {
+				intermediate += -1*connectivity_matrix[i * edges.size() + j] * solution[j]*vars[i];
+			}
+			obj_function += intermediate;
+		}
+		model.setObjective(obj_function);
+
+		GRBLinExpr measure_const = 0;
+		for (int i = 0; i < grid.size(); i++) {
+				measure_const += vars[i];
+		}
+		model.addConstr(measure_const == 1.0, "m");
+
+
+
+		model.optimize();
+
+		std::vector<double> ret(grid.size());
+		for (int i = 0; i < grid.size(); i++) {
+			ret[i] = vars[i].get(GRB_DoubleAttr_X);
+		}
+		return ret;
+	}
+	catch(GRBException e){
+		std::cout << "Error Code = " << e.getErrorCode() << std::endl;
+		std::cout << e.getMessage() << std::endl;
+	}
 }

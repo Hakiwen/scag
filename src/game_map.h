@@ -26,6 +26,8 @@ private:
 	std::vector<edge> edges;
 	int * connectivity_matrix;
 	int * D_matrix;
+	std::vector<double> solution;
+	std::vector<double> ambush;
 public:
 	game_map() = default;
 	//create map with list of squares, width w_, and height h_
@@ -45,6 +47,8 @@ public:
 	std::vector<edge> generate_edges();
 	int * generate_connectivity_matrix();
 	int * generate_D_matrix();
+	std::vector<double> solve_game_traveler();
+	std::vector<double> solve_game_ambusher();
 };
 
 #endif //SCAG_GAME_MAP_H
