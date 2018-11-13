@@ -33,3 +33,14 @@ point::point(std::initializer_list<double> list) {
 	this->x = *list_it;
 	this->y = *++list_it;
 }
+
+bool point::operator==(const point & rhs) {
+	if(this->x == rhs.x && this->y == rhs.y)
+		return true;
+	else
+		return false;
+}
+
+double point::operator^(const point & rhs) {
+	return sqrt((this->x - rhs.x)*(this->x - rhs.x) + (this->y - rhs.y)*(this->y - rhs.y));
+}

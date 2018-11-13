@@ -6,6 +6,8 @@
 #define SCAG_UTILS_H
 #include <vector>
 #include <random>
+#include <chrono>
+#include <iostream>
 #include <boost/graph/undirected_graph.hpp>
 #include <GL/glut.h>
 

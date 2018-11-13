@@ -7,7 +7,7 @@
 
 
 #include <initializer_list>
-
+#include "utils.h"
 struct point {
 	double x;
 	double y;
@@ -19,6 +19,8 @@ struct point {
 	point(point &&) noexcept;
 	point&operator=(const point&);
 	point&operator=(point&&) noexcept;
+	bool operator==(const point &);
+	double operator^(const point &); //norm of distance
 };
 
 
