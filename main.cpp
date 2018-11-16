@@ -10,7 +10,7 @@ void initGL(){
 }
 void display() {
     glClear(GL_COLOR_BUFFER_BIT);   // Clear the color buffer with current clearing color
-	game_map game_map1 = game_map(30, 100);
+	game_map game_map1 = game_map(100, 500);
 
 
     // Define shapes enclosed within a pair of glBegin and glEnd
@@ -31,8 +31,9 @@ int main(int argc, char** argv) {
 
 
 
-		glutMainLoop();                 // Enter the event-processing loop
+		glutMainLoopEvent();                 // Enter the event-processing loop
 
-
+		std::string dont_use;
+		std::cin >> dont_use;
 
 }

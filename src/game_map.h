@@ -10,8 +10,8 @@
 
 
 #define MIN_BOX_DIM 0.001
-#define OBSTACLE_FILL 0.33
-#define AMBUSH_RADIUS 0.01
+#define OBSTACLE_FILL 0.3
+#define AMBUSH_RADIUS 0.05
 struct edge{
 	point head;
 	point tail;

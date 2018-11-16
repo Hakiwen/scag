@@ -83,16 +83,18 @@ bool game_map::is_point_in_X_free(point p) {
 	return ret;
 }
 
-void draw_circle(point p, double r)
+void draw_circle(point p, double r, double alpha)
 {
-	int n_segments = 20;
-	glBegin(GL_LINE_LOOP);
+	int n_segments = 100;
+	glBegin(GL_TRIANGLE_FAN);
 	glColor3d(1.0,0.0,0.0);
+	glVertex2d(2*p.x -1, 2*p.y -1);
 	for(int i = 0; i < n_segments; i++){
-		double theta = (2.0f*M_1_PI*i)/n_segments;
+		double theta = (2.0f*M_PI*i)/n_segments;
 		double x = r*cosf(theta);
 		double y = r*sinf(theta);
-		glVertex2d(2*x - 1 + p.x, 2*y - 1 + p.y);
+
+		glVertex2d(x + 2*p.x - 1, y - 1 + 2*p.y);
 	}
 	glEnd();
 }
@@ -108,34 +110,42 @@ void game_map::draw() {
 	}
 	glEnd();
 
-	glBegin(GL_POINTS);
+//	glBegin(GL_POINTS);
 
 //	double point_size = 0.001;
-	for(int i = 0; i < grid.size(); i++){
-		glColor3f(0.0f,0.0f,0.0f);
-		if(is_point_in_X_free(grid[i])) {
-			glVertex2d(2*grid[i].x - 1.0 ,2*grid[i].y - 1.0);
-		}
+//	for(int i = 0; i < grid.size(); i++){
+//		glColor3f(0.0f,0.0f,0.0f);
+//		if(is_point_in_X_free(grid[i])) {
+//			glVertex2d(2*grid[i].x - 1.0 ,2*grid[i].y - 1.0);
+//		}
 //			glVertex2d(grid[i][j].x/this->width + point_size, grid[i][j].y/this->height + point_size);
 //			glVertex2d(grid[i][j].x/this->width - point_size, grid[i][j].y/this->height + point_size);
 //			glVertex2d(grid[i][j].x/this->width - point_size, grid[i][j].y/this->height - point_size);
 //			glVertex2d(grid[i][j].x/this->width + point_size, grid[i][j].y/this->height - point_size);
-	}
-	glEnd();
+//	}
+//	glEnd();
+
+
 
 	glBegin(GL_LINES);
 	for(int i = 0; i < edges.size(); i++){
-		glColor3d(1.0f - solution[i],1.0f - solution[i],1.0f - solution[i]);
-//		glColor3f(1.0f,1.0f,1.0f);
+		if(solution[i] > 0) {
+			glColor3d(0.0f, 0.0f, 1.0f);
+
+		}
+		else {
+			glColor3d(0.9f, 0.9f, 0.9f);
+
+		}
+// glColor3f(1.0f,1.0f,1.0f);
 		glVertex2d(2*edges[i].head.x - 1.0, 2*edges[i].head.y - 1.0);
 		glVertex2d(2*edges[i].tail.x - 1.0, 2*edges[i].tail.y - 1.0);
 	}
 	glEnd();
 
 	for(int i = 0;i < grid.size(); i++){
-		if(ambush[i] > 0.001){
-			draw_circle(grid[i],ambush[i]);
-		}
+		if(ambush[i] >= 1.0/grid_points)
+			draw_circle(grid[i],AMBUSH_RADIUS, ambush[i]);
 	}
 
 }
