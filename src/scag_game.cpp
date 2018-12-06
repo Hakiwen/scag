@@ -2,7 +2,7 @@
 // Created by jbm on 11/9/18.
 //
 
-#include "game.h"
+#include "scag_game.h"
 
 
 game::game(const game& rhs) : traveler_strat(rhs.traveler_strat), ambusher_strat(rhs.ambusher_strat), game_environment(rhs.game_environment), outcome(rhs.outcome) {}

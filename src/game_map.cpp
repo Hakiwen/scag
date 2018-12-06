@@ -6,7 +6,7 @@
 
 edge::edge(point head_, point tail_) : head(head_), tail(tail_) {}
 
-game_map::game_map(double n, int grid_points_) : grid_points(((int)sqrt(grid_points_))*((int)sqrt(grid_points_))){
+game_map::game_map(double n, int grid_points_) : grid_points(((int)sqrt(grid_points_))*((int)sqrt(grid_points_))) {
 	this->obstacles = std::vector<square_obstacle>(n);
 	std::chrono::high_resolution_clock::time_point seed_beg = std::chrono::high_resolution_clock::now();
 	std::chrono::high_resolution_clock::time_point seed_end = std::chrono::high_resolution_clock::now();
@@ -18,20 +18,20 @@ game_map::game_map(double n, int grid_points_) : grid_points(((int)sqrt(grid_poi
 
 	point anchor_point;
 
-	for(int i = 0; i < n; i++){
+	for (int i = 0; i < n; i++) {
 		anchor_point = point(x_distribution(gen), y_disrtibution(gen));
 		//the chosen omega should yield an expected obstacle density of OBSTACLE FILL, assuming MIN_BOX_DIM is low
-		double omega = sqrt(3*OBSTACLE_FILL/n);
+		double omega = sqrt(3 * OBSTACLE_FILL / n);
 		double width_upper_bound = omega, height_upper_bound = omega;
 
-		if(1 - anchor_point.x + omega <= 0) {
+		if (1 - anchor_point.x + omega <= 0) {
 			width_upper_bound = 1 - anchor_point.x;
 		}
-		if(anchor_point.y - omega <= 0) {
+		if (anchor_point.y - omega <= 0) {
 			height_upper_bound = anchor_point.y;
 		}
-		std::uniform_real_distribution<double>height_distribution(MIN_BOX_DIM, height_upper_bound);
-		std::uniform_real_distribution<double>width_distribution(MIN_BOX_DIM, width_upper_bound);
+		std::uniform_real_distribution<double> height_distribution(MIN_BOX_DIM, height_upper_bound);
+		std::uniform_real_distribution<double> width_distribution(MIN_BOX_DIM, width_upper_bound);
 
 		this->obstacles[i] = square_obstacle(anchor_point, width_distribution(gen), height_distribution(gen2));
 	}
@@ -39,19 +39,28 @@ game_map::game_map(double n, int grid_points_) : grid_points(((int)sqrt(grid_poi
 	this->edges = generate_edges();
 	this->connectivity_matrix = generate_connectivity_matrix();
 	this->D_matrix = generate_D_matrix();
+
+	this->adjacency_matrix_powers = generate_adjacency_powers();
+	this->distance_matrix = generate_distance_matrix();
 	this->solution = solve_game_traveler();
-	this->ambush = solve_game_ambusher();
-
-	for(int i = 0; i < edges.size()*grid.size(); i ++)
-	{
-//		if(!(i % edges.size()))
+//	this->ambush = solve_game_ambusher();
+	this->target_locations = solve_game_hider();
+//	this->outcome = game_outcome();
+	std::cout << this->outcome << std::endl;
+//	for(int i = 0; i < grid.size()*grid.size(); i ++)
+//	{
+//		if(!(i % grid.size()))
 //			std::cout << std::endl;
-//		std::cout << connectivity_matrix[i] << ", ";
-//		std::cout << solution[i] << ", ";
-	}
+//		std::cout << distance_matrix[i] << ", ";
 
+//	}
+//	for(int i = 0; i < grid.size()*grid.size(); i ++)
+//	{
+//		if(!(i % grid.size()))
+//			std::cout << std::endl;
+//		std::cout << adjacency_matrix[i] << ", ";
+//	}
 }
-
 game_map::game_map(const game_map & rhs) : obstacles(rhs.obstacles) {}
 
 game_map::game_map(game_map && rhs) noexcept : obstacles(std::move(rhs.obstacles)) {
@@ -144,8 +153,8 @@ void game_map::draw() {
 	glEnd();
 
 	for(int i = 0;i < grid.size(); i++){
-		if(ambush[i] >= 1.0/grid_points)
-			draw_circle(grid[i],AMBUSH_RADIUS, ambush[i]);
+		if(target_locations[i])
+			draw_circle(grid[i],AMBUSH_RADIUS, 1.0f);
 	}
 
 }
@@ -193,18 +202,24 @@ std::vector<point> game_map::generate_grid(){
 
 std::vector<edge> game_map::generate_edges(){
 	std::vector<edge> ret;
+	ret.reserve(grid_points*grid_points);
+	adjacency_matrix = std::vector<int>(grid.size()*grid.size(), 0);
+
 	for(int i = 0; i < grid.size(); i++){
 		for(int j = i + 1; j < grid.size(); j++){
 			double norm = grid[i]^grid[j];
-			if((norm <= sqrt(2.5)/(sqrt(grid_points) - 1)) && is_edge_in_X_free(grid[i], grid[j]))
+			if((norm <= sqrt(2.5)/(sqrt(grid_points) - 1)) && is_edge_in_X_free(grid[i], grid[j])) {
 				ret.push_back(edge(grid[i], grid[j]));
+				adjacency_matrix[i*grid.size() + j] = 1;
+				adjacency_matrix[j*grid.size() + i] = 1;
+			}
 		}
 	}
 	return ret;
 }
 
 int* game_map::generate_connectivity_matrix() {
-	int * ret = (int * ) malloc((edges.size()*grid.size())*sizeof(int));
+	int * ret = (int * ) malloc(edges.size()*grid.size()*sizeof(int));
 	for(int i = 0; i < grid.size() ; i++){
 		for(int j = 0;j < edges.size() ; j++){
 			if(grid[i] == edges[j].head)
@@ -231,6 +246,7 @@ int * game_map::generate_D_matrix(){
 	}
 	return ret;
 }
+
 
 
 std::string itos(int i) {std::stringstream s; s << i; return s.str(); }
@@ -308,11 +324,11 @@ std::vector<double> game_map::solve_game_ambusher(){
 		for (int i = 0; i < grid.size(); i++) {
 			GRBLinExpr intermediate = 0;
 			for (int j = 0; j < edges.size(); j++) {
-				intermediate += -1*connectivity_matrix[i * edges.size() + j] * solution[j]*vars[i];
+				intermediate += connectivity_matrix[i * edges.size() + j] * solution[j]*vars[i];
 			}
 			obj_function += intermediate;
 		}
-		model.setObjective(obj_function);
+		model.setObjective(obj_function, GRB_MAXIMIZE);
 
 		GRBLinExpr measure_const = 0;
 		for (int i = 0; i < grid.size(); i++) {
@@ -334,4 +350,102 @@ std::vector<double> game_map::solve_game_ambusher(){
 		std::cout << "Error Code = " << e.getErrorCode() << std::endl;
 		std::cout << e.getMessage() << std::endl;
 	}
+}
+
+std::vector<int> game_map::solve_game_hider() {
+	try {
+		GRBEnv env = GRBEnv();
+		GRBModel model = GRBModel(env);
+
+		GRBVar *vars = new GRBVar[grid.size()];
+		for (int i = 0; i < grid.size(); i++) {
+			std::string name = "p_" + itos(i);
+			vars[i] = model.addVar(0.0, 1.0, 0.0, GRB_INTEGER, "q" + itos(i));
+		}
+
+
+		GRBQuadExpr obj_function = 0;
+		for (int i = 0; i < grid.size(); i++) {
+			for (int j = 0; j < grid.size(); j++) {
+				obj_function += distance_matrix[i * grid.size() + j] * vars[j] * vars[i];
+			}
+		}
+		model.setObjective(obj_function, GRB_MAXIMIZE);
+
+
+		GRBLinExpr number_targets_const = 0;
+		for (int i = 0; i < grid.size(); i++) {
+				 number_targets_const += vars[i];
+		}
+		model.addConstr(number_targets_const == 4.0, "m");
+
+
+
+		model.optimize();
+
+		std::vector<int> ret(grid.size());
+		for (int i = 0; i < grid.size(); i++) {
+			ret[i] = vars[i].get(GRB_DoubleAttr_X);
+		}
+		return ret;
+	}
+	catch(GRBException e){
+		std::cout << "Error Code = " << e.getErrorCode() << std::endl;
+		std::cout << e.getMessage() << std::endl;
+	}
+}
+
+std::vector<double> game_map::solve_game_searcher() {
+	return std::vector<double>();
+}
+
+double game_map::game_outcome(){
+	std::vector<double> intermediate_vec(grid.size());
+	for(int i = 0; i < grid.size(); i++){
+		intermediate_vec[i] = 0;
+		for(int j = 0; j < edges.size(); j++){
+			intermediate_vec[i] += D_matrix[i*edges.size() + j] *solution[j];
+		}
+	}
+	double ret = 0;
+	for(int i = 0; i < grid.size(); i++){
+		ret += intermediate_vec[i]*ambush[i];
+	}
+	return ret;
+}
+
+std::vector<std::vector<int> > game_map::generate_adjacency_powers() {
+	std::vector<std::vector<int>> ret(grid.size());
+	ret[0] = adjacency_matrix;
+	for(int z = 1; z < grid.size(); z++) {
+		std::vector<int> next_power(grid.size()*grid.size(), 0);
+		for(int i = 0; i < grid.size(); i++) {
+			for(int j = 0; j < grid.size(); j++) {
+				for(int k = 0; k < grid.size(); k++) {
+					next_power[i*grid.size() + j] += ret[0][i*grid.size() + k]*ret[z-1][k*grid.size() + j];
+				}
+			}
+		}
+		ret[z] = next_power;
+	}
+	return ret;
+
+}
+
+int game_map::distance_between_vertices(int i, int j) {
+	for(int z = 0; z < grid.size(); z++){
+		if(adjacency_matrix_powers[z][i*grid.size() + j] >= 1){
+			return z + 1;
+		}
+	}
+}
+
+int * game_map::generate_distance_matrix() {
+	int * ret = (int *) malloc(sizeof(int)*grid.size()*grid.size());
+	for(int i = 0; i < grid.size(); i++) {
+		for(int j = 0; j < grid.size(); j++) {
+			ret[i*grid.size() + j] = distance_between_vertices(i,j);
+		}
+	}
+	return ret;
 }

@@ -10,7 +10,7 @@
 
 
 #define MIN_BOX_DIM 0.001
-#define OBSTACLE_FILL 0.3
+#define OBSTACLE_FILL 0.5
 #define AMBUSH_RADIUS 0.05
 struct edge{
 	point head;
@@ -18,17 +18,23 @@ struct edge{
 
 	edge(point head, point tail);
 };
-class game_map {
-private:
+struct game_map {
+
 	int grid_points;
 	std::vector<square_obstacle> obstacles;
 	std::vector<point> grid;
 	std::vector<edge> edges;
 	int * connectivity_matrix;
 	int * D_matrix;
+	int * distance_matrix;
+	std::vector<int> adjacency_matrix;
+	std::vector<std::vector<int> > adjacency_matrix_powers;
 	std::vector<double> solution;
 	std::vector<double> ambush;
-public:
+	std::vector<int> target_locations;
+	double outcome;
+
+
 	game_map() = default;
 	//create map with list of squares, width w_, and height h_
 	game_map(std::initializer_list<square_obstacle> obstacles_);
@@ -47,8 +53,14 @@ public:
 	std::vector<edge> generate_edges();
 	int * generate_connectivity_matrix();
 	int * generate_D_matrix();
+	std::vector<std::vector<int> > generate_adjacency_powers();
+	int distance_between_vertices(int i, int j);
+	int * generate_distance_matrix();
 	std::vector<double> solve_game_traveler();
+	std::vector<int> solve_game_hider();
+	std::vector<double>solve_game_searcher();
 	std::vector<double> solve_game_ambusher();
+	double game_outcome();
 };
 
 #endif //SCAG_GAME_MAP_H
