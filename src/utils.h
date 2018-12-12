@@ -12,6 +12,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <boost/graph/undirected_graph.hpp>
+#include <cmath>
 #include <GL/glut.h>
 #include <GL/freeglut_ext.h>
 #include "gurobi_c++.h"

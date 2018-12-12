@@ -9,8 +9,9 @@ square_obstacle::square_obstacle(point tl, point tr, point bl, point br) : top_l
 																			top_right(tr),
 																			bottom_left(bl),
 																			bottom_right(br) {
-	this->width = tl.x - tr.x;
-	this->height = tl.y - bl.y;
+	this->width = tr.x - tl.x;
+//	this->height = tl.y - bl.y;
+	this->height = tr.y - br.y;
 }
 
 
@@ -26,7 +27,7 @@ square_obstacle::square_obstacle(point tl, double w_, double h_) : top_left(tl),
 square_obstacle::square_obstacle(const square_obstacle & rhs) : top_left(rhs.top_left),
 																top_right(rhs.top_right),
 																bottom_left(rhs.bottom_left),
-																bottom_right(bottom_right),
+																bottom_right(rhs.bottom_right),
 																width(rhs.width),
 																height(rhs.height) {}
 square_obstacle::square_obstacle(square_obstacle && rhs) noexcept {

@@ -10,8 +10,10 @@
 
 
 #define MIN_BOX_DIM 0.001
-#define OBSTACLE_FILL 0.5
-#define AMBUSH_RADIUS 0.05
+#define OBSTACLE_FILL 0.3
+#define AMBUSH_RADIUS 0.13
+#define NUM_TARGETS 4
+
 struct edge{
 	point head;
 	point tail;
@@ -27,17 +29,22 @@ struct game_map {
 	int * connectivity_matrix;
 	int * D_matrix;
 	int * distance_matrix;
+	int num_source_nodes;
+	int num_sink_nodes;
 	std::vector<int> adjacency_matrix;
 	std::vector<std::vector<int> > adjacency_matrix_powers;
 	std::vector<double> solution;
+	std::vector<double> searcher_paths;
 	std::vector<double> ambush;
 	std::vector<int> target_locations;
+	int chosen_target_index;
+
 	double outcome;
 
 
 	game_map() = default;
 	//create map with list of squares, width w_, and height h_
-	game_map(std::initializer_list<square_obstacle> obstacles_);
+	game_map(int grid_points_, std::initializer_list<square_obstacle> obstacles_);
 	//randomly generate n obstacles
 	game_map(double n, int grid_points_);
 	game_map(const game_map&);
