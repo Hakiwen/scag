@@ -21,7 +21,7 @@ void display() {
 	square_obstacle ob7(point(0.51,0.13),point(0.65,0.13), point(0.51, -0.01),point(0.65,-0.01));
 	square_obstacle ob8(point(0.85,1.01),point(0.95,1.01), point(0.85,0.85),point(0.95,0.85));
 	square_obstacle ob9(point(0.85,0.51),point(1,0.51), point(0.85,0.33),point(1,0.33));
-	game_map game_map1(49, {ob1, ob2, ob3, ob4, ob5, ob6, ob7, ob8, ob9});
+	game_map game_map1(729, {ob1, ob2, ob3, ob4, ob5, ob6, ob7, ob8, ob9});
 
     // Define shapes enclosed within a pair of glBegin and glEnd
    	game_map1.draw();

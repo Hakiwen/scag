@@ -488,7 +488,7 @@ std::vector<double> game_map::solve_game_ambusher(){
 
 		std::vector<double> ret(grid.size());
 		for (int i = 0; i < grid.size(); i++) {
-			ret[i] =(1.0/num_ambushes) *vars[i].get(GRB_DoubleAttr_X);
+			ret[i] =vars[i].get(GRB_DoubleAttr_X);
 		}
 		return ret;
 	}
